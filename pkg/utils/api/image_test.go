@@ -332,6 +332,30 @@ func Test_extractImageInfo(t *testing.T) {
 				},
 			},
 		},
+		{
+			extractionConfig: kyvernov1.ImageExtractorConfigs{
+				"MyResource": []kyvernov1.ImageExtractorConfig{
+					{Name: "items", Path: "/spec/items/*", Value: "image", Key: "name"},
+				},
+			},
+			raw: []byte(`{"apiVersion":"example.com/v1","kind":"MyResource","metadata":{"name":"example"},"spec":{"items":["plain-string",{"name":"app","image":"nginx:latest"},42]}}`),
+			images: map[string]map[string]ImageInfo{
+				"items": {
+					"app": {
+						imageutils.ImageInfo{
+							Registry:         "docker.io",
+							Name:             "nginx",
+							Path:             "nginx",
+							Tag:              "latest",
+							Reference:        "docker.io/nginx:latest",
+							ReferenceWithTag: "docker.io/nginx:latest",
+						},
+						"/spec/items/1/image",
+						[]string{},
+					},
+				},
+			},
+		},
 	}
 	for _, test := range tests {
 		resource, err := kubeutils.BytesToUnstructured(test.raw)
